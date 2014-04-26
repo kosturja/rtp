@@ -5,6 +5,17 @@
 
 (defvar *Clause_list* '())
 (load "unify.lisp")
+
+(defvar *Axioms*
+  (progn
+    (list
+     '(human Marcus)
+     '(pompeian Marcus)
+     '(born Marcus 40)
+     '(or (not (human ?x)) (mortal ?x))
+     '(or (not (pompeian ?x)) (died ?x 79) (erupted volcano 79))
+     '(or (not (mortal ?x)) (not (born ?x ?t1)) (not (gt ?t2 ?t1 150)) (dead ?x ?t2)))))
+
 (defun reset_clause_list ()
   (setf *Clause_list* '()))
 
@@ -12,6 +23,26 @@
 (defun or_clause (clause)
   (if (equal (car clause) 'or) t
       nil))
+
+;Determines if a c clause starts with an AND
+(defun and_clause (clause)
+  (if (equal (car clause) 'and) t
+      nil))
+
+;; Determines implies clause
+(defun implies_clause (clause)
+  (if (equal (car clause) 'implies) t
+      nil))
+; Existential 
+(defun exist_clause (clause)
+  (if (equal (car clause) 'exists) t
+      nil))
+
+;Universal
+(defun forall (clause)
+  (if (equal (car clause) 'forall) t
+      nil))
+
 
 ;;Determines if a clause starts with an NOT
 (defun not_clause (clause)
@@ -36,19 +67,34 @@
 	     do (push item *Clause_list*))
 	(print *Clause_list*))))
 
+(defun my_find_2 (clause axiom_list)
+  (print "Number 2")
+  (let ((cnt 0))
+    (loop
+       for item in axiom_list
+	 do (print item)
+	 if (equal clause item)
+	 do (progn
+	      (print cnt)
+	      (return-from my_find_2 cnt)
+	 else do(setf cnt(+ cnt 1))))))
 
 
 (defun my_find (clause axiom_list)
   ;returns the location of clause in axiom_list
-  (if (not (member clause axiom_list :test 'equal)) (print "Clause not found")
-      (let ((cnt 0))
-	(loop
-	     for item in axiom_list
-	     if (equal clause item)
-	     do (return-from my_find  cnt)
-	     else do(setf cnt(+ cnt 1))))))
+  (let ((cnt 0))
+    (loop
+       for item in axiom_list
+	 if (> (length item) 2)
+	     do (my_find_2 clause item)
+	 if (equal clause item)
+       do (return-from my_find  cnt)
+       else do(setf cnt(+ cnt 1)))))
 
-
+(defun mydisassemble (clause)
+  (loop
+     for item in clause
+       do (push item *Clause_list*)))
 
 (defun resolve (clause axiom_list)
   ; First check it we have negated clause, then remove the 'NOT and check to see if the positive 
