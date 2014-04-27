@@ -6,15 +6,17 @@
 (defvar *Clause_list* '())
 (load "unify.lisp")
 
-(defvar *Axioms*
-  (progn
-    (list
+(defvar *Axioms* nil)
+
+(setq *Axioms* (list
+'(or (not (mortal ?x)) (not (born ?x ?t1)) (not (gt ?t2 ?t1 150)) (dead ?x ?t2))
      '(human Marcus)
      '(pompeian Marcus)
      '(born Marcus 40)
      '(or (not (human ?x)) (mortal ?x))
+     
      '(or (not (pompeian ?x)) (died ?x 79) (erupted volcano 79))
-     '(or (not (mortal ?x)) (not (born ?x ?t1)) (not (gt ?t2 ?t1 150)) (dead ?x ?t2)))))
+     ))
 
 (defun reset_clause_list ()
   (setf *Clause_list* '()))
@@ -72,44 +74,34 @@
 
 (defun my_find_2 (clause axiom_list)
   ;(print "Number 2")
-  (let ((cnt 0))
+  (let ((cnt2 0))
     (loop
        for item in axiom_list
 	 ;do (print item)
 	 if (equal clause item)
 	 do (progn
-	      (return cnt))
+	      (return cnt2))
 	 else do (progn
 		   ;(print cnt)
-		   (setf cnt(+ cnt 1))))))
+		   (setf cnt2(+ cnt2 1))))))
 
 (defun my_find (clause axiom_list)
   ;returns the location of clause in axiom_list
-  ;(let ((cnt '(0 0)))
-  (setf cnt '(0 0))
-  
-    ;(print cnt)
+  ; includes imbedded list, in which case it returns a pair
+  ; (index in axiom set, index in to specific axiom)
+  ; since we add one to our counter before we look at an axiom, we must subtract one
+  ; form the first index just before we return.
+  (let ((cnt 0))
     (loop
        for item in axiom_list
-	 do (print item)
+	 do (setf cnt  (+ cnt 1))
 	 if (> (length item) 3)
 	     do (progn
-		  (if (is_compound clause)
-		  do (progn
-		      (let ((inner (my_find_2 clause item)))
-			(print "inner:")
-			(print inner)
-			(if (not (null inner))
-			    (setf (cdr cnt) inner)
-			    (setf (car cnt) (+ (car cnt) 1))))
-		      (print cnt))))		  
-	 else if (equal clause item)
-           do (return-from my_find  cnt)
-	 else
-           do(progn
-	       (print "car add")
-	       (setf (car cnt)(+ (car cnt) 1))
-	       (print  cnt))))
+		  (let ((inner (my_find_2 clause item)))
+		    (if (not (null inner))
+			(return-from my_find (list (- cnt 1) inner)))))
+       else if (equal clause item)
+       do (return-from my_find  cnt))))
 
 (defun mydisassemble (clause)
   (loop
