@@ -158,8 +158,9 @@
 					; store its location in the axiom set in location
 
 	
-(defun prove (clause axiom_list)
+(defun prove (clause axiom_list &optional prooflist)
   (print (format t "We are trying to prove that ~S" clause))
+  (let ((prooflist '()
   (if (> (length clause) 2)
       (loop
 	   for item in clause
