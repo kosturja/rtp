@@ -8,6 +8,7 @@
 
 (defvar *Axioms* nil)
 (defvar *Proof_list* nil)
+(setf *Proof_list* '())
 
 (setq *Axioms* (list
 '(or (not (mortal ?x)) (not (born ?x ?t1)) (not (gt ?t2 ?t1 150)) (dead ?x ?t2))
@@ -60,7 +61,7 @@
 ;; Creates a negated clause if the clause passed is true
 ;; Creates a true clause if the clause passed is negative.
 (defun negate (clause)
-  (if (not_clause clause) (cdr clause)
+  (if (not_clause clause) (cadr clause)
       (append (list 'not) (list clause))))
 
 
@@ -109,26 +110,57 @@
      for item in clause
        do (push item *Clause_list*)))
 
-(defun resolve (clause axiom_list)
-  ; First check it we have negated clause, then remove the 'NOT and check to see if the positive 
-  ; is in the axiom list.
-  (if (not_clause clause)
-      (let ((clause (cadr clause)))
-	(setf location (my_find clause axiom_list))
-	(member clause axiom_list :test 'equal)
-	(return-from resolve location))
-      ;clause is positive so we negate it and see that is in the axiom list
-      (let ((clause (negate clause)))
-	(setf location (my_find clause axiom_list))
-	(member clause axiom_list :test 'equal)
-	(return-from resolve location))))
+(defun resolve (clause axiom_list location)
+  ; This function takes an clause, the KB and the location of
+  ; the clause in the KB, we then return a proof_list with the
+  ; results of resolving the clause.
+  (let* ((first_index (car location))
+	(second_index (cadr location))
+	(whole_axiom (nth first_index *axioms*))
+	 (temp_proof *Proof_list*))
+    (pop *Proof_list*)
+    (loop
+       for item in whole_axiom
+	 ;do (print "Looping")
+	 if (not (equal clause item))
+	 do (progn
+	      (push (pop whole_axiom) temp_proof)))
+    (setf temp_proof (reverse temp_proof))
+    (print temp_proof)
+    (return-from resolve temp_proof)))
 
 
 
-(defun prove (clause axiom_list)
-  (let ((new_clause (negate clause)))
-    (push new_clause *Proof_list*)
-    (setf location (my_find new_clause *axioms*))
-    (print location)))
+(defun prove1(clause axiom_list)
+  (print (format t "We are trying to prove that ~S" clause))
+  (let ((new_clause (negate clause))
+	(prooflist '())
+	(newer_clause '()))
+    (push new_clause prooflist); The thing we want to prove, negated clause.
+    ; Add it to the proof list
+    (loop
+       for item in prooflist
+	 do (print "---------")
+	 do (print prooflist)
+	 do (print "---------")
+	 do (print item)
+	 do (print "==========")
+	 do (setf newest_clause item)
+					; Pick the first clause to resolve from proof_list
+					; Then we negate it and see if it resides in the axioms
+	 do (setf location (my_find (negate newest_clause) *axioms*))
+	 if (not (null location))
+	 do (setf newer_clause (resolve (negate newest_clause) axiom_list location))
+	 ;do (print newer_clause)
+	 do (setf prooflist newer_clause)
+	 do (print prooflist)
+	 )))
+					; store its location in the axiom set in location
+
 	
-	       
+(defun prove (clause axiom_list)
+  (print (format t "We are trying to prove that ~S" clause))
+  (if (> (length clause) 2)
+      (loop
+	   for item in clause
+	   do 
