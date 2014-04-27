@@ -85,10 +85,14 @@
 
 (defun my_find (clause axiom_list)
   ;returns the location of clause in axiom_list
-  (let ((cnt '(0 0)))
+  ;(let ((cnt '(0 0)))
+  (setf cnt '(0 0))
+  
+    ;(print cnt)
     (loop
        for item in axiom_list
-	 if (> (length item) 2)
+	 do (print item)
+	 if (> (length item) 3)
 	     do (progn
 		  (if (is_compound clause)
 		  do (progn
@@ -96,15 +100,16 @@
 			(print "inner:")
 			(print inner)
 			(if (not (null inner))
-			    (setf (cdr cnt) inner)))
-		      (print cnt))))
+			    (setf (cdr cnt) inner)
+			    (setf (car cnt) (+ (car cnt) 1))))
+		      (print cnt))))		  
 	 else if (equal clause item)
            do (return-from my_find  cnt)
 	 else
            do(progn
 	       (print "car add")
-	       (print (car cnt))
-	       (setf (car cnt)(+ (car cnt) 1))))))
+	       (setf (car cnt)(+ (car cnt) 1))
+	       (print  cnt))))
 
 (defun mydisassemble (clause)
   (loop
