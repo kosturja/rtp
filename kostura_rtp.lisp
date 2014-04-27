@@ -7,6 +7,7 @@
 (load "unify.lisp")
 
 (defvar *Axioms* nil)
+(defvar *Proof_list* nil)
 
 (setq *Axioms* (list
 '(or (not (mortal ?x)) (not (born ?x ?t1)) (not (gt ?t2 ?t1 150)) (dead ?x ?t2))
@@ -124,5 +125,10 @@
 
 
 
-
+(defun prove (clause axiom_list)
+  (let ((new_clause (negate clause)))
+    (push new_clause *Proof_list*)
+    (setf location (my_find new_clause *axioms*))
+    (print location)))
+	
 	       
