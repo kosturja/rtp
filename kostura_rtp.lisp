@@ -18,6 +18,7 @@
      '(or (not (human ?x)) (mortal ?x))
      
      '(or (not (pompeian ?x)) (died ?x 79) (erupted volcano 79))
+     '(or (not (died ?x ?t1)) (not (gt ?t2 ?t1)) (dead ?x ?t2))
      ))
 
 (defun reset_clause_list ()
@@ -46,7 +47,6 @@
 (defun forall (clause)
   (if (equal (car clause) 'forall) t
       nil))
-
 
 ;;Determines if a clause starts with an NOT
 (defun not_clause (clause)
@@ -158,10 +158,22 @@
 					; store its location in the axiom set in location
 
 	
-(defun prove (clause axiom_list &optional prooflist)
+(defun prove (clause axiom_list &optional prflist)
   (print (format t "We are trying to prove that ~S" clause))
-  (let ((prooflist '()
-  (if (> (length clause) 2)
-      (loop
-	   for item in clause
-	   do 
+  (let ((prooflist prflist)
+	(new_clause (negate clause))
+	(newer_clause '())
+	(temp '()))
+    (if (is_compound clause)
+	(loop
+	     for item in clause
+	     do (push item temp))
+	(setf temp (reverse temp))
+	(setf temp clause))
+    (setf temp (reverse temp))
+    (if (and (not (null temp)) (not (null prooflist)))
+	(setf prooflist (append (list 'or temp prooflist)))
+	(setf prooflist (append  clause)))
+    (print "Final List")
+    (print prooflist)))
+    
