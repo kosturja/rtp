@@ -48,7 +48,10 @@
 (defun not_clause (clause)
   (if (equal (car clause) 'not) t
       nil))
-
+(defun is_compound (clause)
+  (if (or (not_clause clause) (forall clause) (exist_clause clause)
+	  (implies_clause clause) (and_clause clause) (or_clause clause)) t
+	  nil))
 
 ;;A function to negate a clause
 ;; Creates a negated clause if the clause passed is true
@@ -68,28 +71,40 @@
 	(print *Clause_list*))))
 
 (defun my_find_2 (clause axiom_list)
-  (print "Number 2")
+  ;(print "Number 2")
   (let ((cnt 0))
     (loop
        for item in axiom_list
-	 do (print item)
+	 ;do (print item)
 	 if (equal clause item)
 	 do (progn
-	      (print cnt)
-	      (return-from my_find_2 cnt)
-	 else do(setf cnt(+ cnt 1))))))
-
+	      (return cnt))
+	 else do (progn
+		   ;(print cnt)
+		   (setf cnt(+ cnt 1))))))
 
 (defun my_find (clause axiom_list)
   ;returns the location of clause in axiom_list
-  (let ((cnt 0))
+  (let ((cnt '(0 0)))
     (loop
        for item in axiom_list
 	 if (> (length item) 2)
-	     do (my_find_2 clause item)
-	 if (equal clause item)
-       do (return-from my_find  cnt)
-       else do(setf cnt(+ cnt 1)))))
+	     do (progn
+		  (if (is_compound clause)
+		  do (progn
+		      (let ((inner (my_find_2 clause item)))
+			(print "inner:")
+			(print inner)
+			(if (not (null inner))
+			    (setf (cdr cnt) inner)))
+		      (print cnt))))
+	 else if (equal clause item)
+           do (return-from my_find  cnt)
+	 else
+           do(progn
+	       (print "car add")
+	       (print (car cnt))
+	       (setf (car cnt)(+ (car cnt) 1))))))
 
 (defun mydisassemble (clause)
   (loop
