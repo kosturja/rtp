@@ -168,7 +168,7 @@
 	(loop
 	     for item in clause
 	     do (push item temp))
-	(setf temp (reverse temp))
+	(setf temp (reverse temp);only reverse if we parse clause otherwise just append clause
 	(setf temp clause))
     (setf temp (reverse temp))
     (if (and (not (null temp)) (not (null prooflist)))
