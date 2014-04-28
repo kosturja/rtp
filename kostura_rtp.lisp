@@ -5,22 +5,22 @@
 
 (defvar *Clause_list* '())
 (load "unify.lisp")
-
-(defvar *Axioms* nil)
+(load "axioms.lisp")
+;(defvar *Axioms* nil)
 (defvar *Proof_list* nil)
 (setf *Proof_list* '())
 
-(setq *Axioms* (list
-'(or (not (mortal ?x)) (not (born ?x ?t1)) (not (gt ?t2 ?t1 150)) (dead ?x ?t2))
-     '(human Marcus)
-     '(pompeian Marcus)
-     '(born Marcus 40)
-     '(or (not (human ?x)) (mortal ?x))
-     
-     '(or (not (pompeian ?x)) (died ?x 79) (erupted volcano 79))
-     '(or (not (died ?x ?t1)) (not (gt ?t2 ?t1)) (dead ?x ?t2))
-     '(human  ?x)
-     ))
+;(setq *Axioms* (list
+;'(or (not (mortal ?x)) (not (born ?x ?t1)) (not (gt ?t2 ?t1 150)) (dead ?x ?t2))
+;     '(human Marcus)
+ ;    '(pompeian Marcus)
+  ;   '(born Marcus 40)
+   ;  '(or (not (human ?x)) (mortal ?x))
+    ; 
+     ;'(or (not (pompeian ?x)) (died ?x 79) (erupted volcano 79))
+     ;'(or (not (died ?x ?t1)) (not (gt ?t2 ?t1)) (dead ?x ?t2))
+     ;'(human  ?x)
+     ;))
 
 (defun reset_clause_list ()
   (setf *Clause_list* '()))
@@ -29,6 +29,18 @@
 (defun or_clause (clause)
   (if (equal (car clause) 'or) t
       nil))
+(defun remove_and_or (clause)
+  (if (or (equal (car clause) 'or) (equal (car clause) 'and)) (cdr clause)))
+
+(defun remove_and_or (clause)
+  (cond
+    ((or (equal (car clause) 'or) (equal (car clause) 'and))
+     (cond
+       ((= (length clause) 2)
+	(return-from remove_and_or (cadr clause))))
+     (t
+      (return-from remove_and_or clause)))))
+
 
 ;Determines if a clause starts with an AND
 (defun and_clause (clause)
@@ -60,7 +72,10 @@
   (if (or (not_clause clause) (forall clause) (exist_clause clause)
 	  (implies_clause clause) (and_clause clause) (or_clause clause)) t
 	  nil))
-
+(defun is_compound_not (clause)
+  (if (or (forall clause) (exist_clause clause)
+	  (implies_clause clause) (and_clause clause) (or_clause clause)) t
+	  nil))
 ;;A function to negate a clause
 ;; Creates a negated clause if the clause passed is true
 ;; Creates a true clause if the clause passed is negative.
@@ -99,6 +114,8 @@
   ; form the first index just before we return.
   (let* ((cnt 0)
 	(clause (negate clause)))
+    ;(print "My find")
+    (print clause)
     (loop
        for item in axiom_list
 	 do (setf cnt  (+ cnt 1))
@@ -109,7 +126,7 @@
 		    (if (not (null inner))
 			(return-from my_find (list (- cnt 1) inner)))))
        else if (equal clause item)
-       do (return-from my_find  cnt))))
+       do (return-from my_find  (list cnt)))))
 
 (defun mydisassemble (clause)
   (loop
@@ -123,6 +140,7 @@
   (let* ((first_index (car location))
 	(second_index (cadr location))
 	(whole_axiom (nth first_index *axioms*))
+	 ;(clause (negate clause))
 	 (temp_proof *Proof_list*))
     (pop *Proof_list*)
     (loop
@@ -167,33 +185,39 @@
 ; Pass the positive clause, the find function will negate it for you
 ; Hopefully this will prove trivial things, not including variables.	
 (defun prove (clause axiom_list &optional prflist)
-  (print (format t "We are trying to prove that ~S" clause))
+  (cond
+    ((null clause)
+     (print (format t "We proved it!")))
+    (t
+     (print (format t "We are trying to prove that ~S" clause))))
   (cond
     ((null clause)
      (return-from prove t))
     (t
      (let ((prooflist prflist)
-	   (new_clause (negate clause))
+	   (new_clause '())
 	   (newer_clause '())
 	   (temp '())
 	   (resolve_result '())
-	   (flag nil))
+	   (flag '()))
        (cond
 	 ((and (not (null clause)) (not (null prooflist)))
 	  (setf prooflist (append (list 'or clause prooflist))))
 	 (t
-	  (setf prooflist (append clause))
-	  (print "======")
-	  (print prooflist)))
+	  (setf prooflist (append clause))))
+	  ;(print "======")
+	  ;(print prooflist)))
        (cond
-	 ((is_compound prooflist)
+	 ((is_compound_not prooflist)
 	  (setf temp (car (last prooflist))))
 	 (t
-	  (setf temp prooflist)
-	  (print "-------")
-	  (print temp)))
-       (print temp)
+	  (setf temp prooflist)))
+	  ;(print "-------")
+	  ;(print temp)))
+       ;(print "******")
+       ;(print temp)
        (setf newer_clause (resolve temp axiom_list (my_find temp axiom_list)))
-					;(print newer_clause)
-       ;(prove newer_clause axiom_list)
+					;(print "newer")
+       (setf new_clause (remove_and_or newer_clause))
+       (prove new_clause axiom_list)
     ))))
