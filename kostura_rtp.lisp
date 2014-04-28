@@ -97,7 +97,8 @@
   ; (index in axiom set, index in to specific axiom)
   ; since we add one to our counter before we look at an axiom, we must subtract one
   ; form the first index just before we return.
-  (let ((cnt 0))
+  (let* ((cnt 0)
+	(clause (negate clause)))
     (loop
        for item in axiom_list
 	 do (setf cnt  (+ cnt 1))
@@ -135,9 +136,10 @@
     (return-from resolve temp_proof)))
 
 
-
+; This was my first attempt at a prove function, least to say it doesn't work
+; But i used it for a basis for my second version below
 (defun prove1(clause axiom_list)
-  (print (format t "We are trying to prove that ~S" clause))
+ (print (format t "We are trying to prove that ~S" clause))
   (let ((new_clause (negate clause))
 	(prooflist '())
 	(newer_clause '()))
@@ -162,45 +164,36 @@
 	 )))
 					; store its location in the axiom set in location
 
-	
+; Pass the positive clause, the find function will negate it for you
+; Hopefully this will prove trivial things, not including variables.	
 (defun prove (clause axiom_list &optional prflist)
   (print (format t "We are trying to prove that ~S" clause))
-  (let ((prooflist prflist)
-	(new_clause (negate clause))
-	(newer_clause '())
-	(temp '())
-	(resolve_result '())
-	(flag nil))
-    ;Remove the below because it appears to be redundant
-  ;  (cond
-     ; ((is_compound clause)
-       ;(loop
-;	  for item in clause
-;	    do (push item temp))
-      ; (setf temp (reverse temp))
-     ;  (setf flag t))
-    ;  (t
-     ;  (setf temp clause)))
-    (cond
-      ((and (not (null clause)) (not (null prooflist)))
-       (setf prooflist (append (list 'or clause prooflist))))
-      (t
-       (setf prooflist (append clause))))
-   ; (cond
-    ;  ((is_compound prooflist)
-     ;  (loop
-;	    for item in prooflist
-;	    if (not (is_conj item))
-;	    do (setf resolve_result (append  resolve_result (list (resolve item *axioms* (my_find item *axioms*)))))
- ;      (setf prooflist (append (list 'or 
-  ;  (print "Final List")
-    ;(print prooflist)
-    (cond
-      ((is_compound prooflist)
-       (setf temp (car (last prooflist))))
-      (t
-       (setf temp prooflist)))
-    (setf newer_clause (resolve temp axiom_list (my_find temp axiom_list)))
-    (print newer_clause)
-    ;(prove newer_clause axiom_list)
-    ))
+  (cond
+    ((null clause)
+     (return-from prove t))
+    (t
+     (let ((prooflist prflist)
+	   (new_clause (negate clause))
+	   (newer_clause '())
+	   (temp '())
+	   (resolve_result '())
+	   (flag nil))
+       (cond
+	 ((and (not (null clause)) (not (null prooflist)))
+	  (setf prooflist (append (list 'or clause prooflist))))
+	 (t
+	  (setf prooflist (append clause))
+	  (print "======")
+	  (print prooflist)))
+       (cond
+	 ((is_compound prooflist)
+	  (setf temp (car (last prooflist))))
+	 (t
+	  (setf temp prooflist)
+	  (print "-------")
+	  (print temp)))
+       (print temp)
+       (setf newer_clause (resolve temp axiom_list (my_find temp axiom_list)))
+					;(print newer_clause)
+       ;(prove newer_clause axiom_list)
+    ))))
