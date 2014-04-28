@@ -177,9 +177,6 @@
        (setf prooflist (append (list 'or temp prooflist))))
       (t
        (setf prooflist (append clause))))
-    ;(if (and (not (null temp)) (not (null prooflist)))
-;	(setf prooflist (append (list 'or temp prooflist)))
-;	(setf prooflist (append  clause)))
     (print "Final List")
     (print prooflist)))
     
