@@ -172,19 +172,14 @@
        (setf temp (reverse temp)))
       (t
        (setf temp clause)))
-      
- ;   (if (is_compound clause)
-;	(progn
-;	  (loop
-;	     for item in clause
-;	     do (push item temp)))
-;	(setf temp (reverse temp))
-	;only reverse if we parse clause otherwisejust append clause
-	;(setf temp clause))
-    ;(setf temp (reverse temp))
-    (if (and (not (null temp)) (not (null prooflist)))
-	(setf prooflist (append (list 'or temp prooflist)))
-	(setf prooflist (append  clause)))
+    (cond
+      ((and (not (null temp)) (not (null prooflist)))
+       (setf prooflist (append (list 'or temp prooflist))))
+      (t
+       (setf prooflist (append clause))))
+    ;(if (and (not (null temp)) (not (null prooflist)))
+;	(setf prooflist (append (list 'or temp prooflist)))
+;	(setf prooflist (append  clause)))
     (print "Final List")
     (print prooflist)))
     
