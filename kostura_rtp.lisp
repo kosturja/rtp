@@ -164,13 +164,24 @@
 	(new_clause (negate clause))
 	(newer_clause '())
 	(temp '()))
-    (if (is_compound clause)
-	(loop
-	     for item in clause
-	     do (push item temp))
-	(setf temp (reverse temp);only reverse if we parse clause otherwise just append clause
-	(setf temp clause))
-    (setf temp (reverse temp))
+    (cond
+      ((is_compound clause)
+       (loop
+	  for item in clause
+	    do (push item temp))
+       (setf temp (reverse temp)))
+      (t
+       (setf temp clause)))
+      
+ ;   (if (is_compound clause)
+;	(progn
+;	  (loop
+;	     for item in clause
+;	     do (push item temp)))
+;	(setf temp (reverse temp))
+	;only reverse if we parse clause otherwisejust append clause
+	;(setf temp clause))
+    ;(setf temp (reverse temp))
     (if (and (not (null temp)) (not (null prooflist)))
 	(setf prooflist (append (list 'or temp prooflist)))
 	(setf prooflist (append  clause)))
