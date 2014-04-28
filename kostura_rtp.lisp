@@ -19,6 +19,7 @@
      
      '(or (not (pompeian ?x)) (died ?x 79) (erupted volcano 79))
      '(or (not (died ?x ?t1)) (not (gt ?t2 ?t1)) (dead ?x ?t2))
+     '(human  ?x)
      ))
 
 (defun reset_clause_list ()
@@ -29,7 +30,7 @@
   (if (equal (car clause) 'or) t
       nil))
 
-;Determines if a c clause starts with an AND
+;Determines if a clause starts with an AND
 (defun and_clause (clause)
   (if (equal (car clause) 'and) t
       nil))
@@ -47,11 +48,14 @@
 (defun forall (clause)
   (if (equal (car clause) 'forall) t
       nil))
-
+(defun is_conj (clause)
+  (if (or (equal clause 'or) (equal clause 'and)) t
+      nil))
 ;;Determines if a clause starts with an NOT
 (defun not_clause (clause)
   (if (equal (car clause) 'not) t
       nil))
+
 (defun is_compound (clause)
   (if (or (not_clause clause) (forall clause) (exist_clause clause)
 	  (implies_clause clause) (and_clause clause) (or_clause clause)) t
@@ -97,7 +101,8 @@
     (loop
        for item in axiom_list
 	 do (setf cnt  (+ cnt 1))
-	 if (> (length item) 3)
+	 ;do (print item)
+	 if (is_compound item)
 	     do (progn
 		  (let ((inner (my_find_2 clause item)))
 		    (if (not (null inner))
@@ -126,7 +131,7 @@
 	 do (progn
 	      (push (pop whole_axiom) temp_proof)))
     (setf temp_proof (reverse temp_proof))
-    (print temp_proof)
+    ;(print temp_proof)
     (return-from resolve temp_proof)))
 
 
@@ -163,20 +168,39 @@
   (let ((prooflist prflist)
 	(new_clause (negate clause))
 	(newer_clause '())
-	(temp '()))
+	(temp '())
+	(resolve_result '())
+	(flag nil))
+    ;Remove the below because it appears to be redundant
+  ;  (cond
+     ; ((is_compound clause)
+       ;(loop
+;	  for item in clause
+;	    do (push item temp))
+      ; (setf temp (reverse temp))
+     ;  (setf flag t))
+    ;  (t
+     ;  (setf temp clause)))
     (cond
-      ((is_compound clause)
-       (loop
-	  for item in clause
-	    do (push item temp))
-       (setf temp (reverse temp)))
-      (t
-       (setf temp clause)))
-    (cond
-      ((and (not (null temp)) (not (null prooflist)))
-       (setf prooflist (append (list 'or temp prooflist))))
+      ((and (not (null clause)) (not (null prooflist)))
+       (setf prooflist (append (list 'or clause prooflist))))
       (t
        (setf prooflist (append clause))))
-    (print "Final List")
-    (print prooflist)))
-    
+   ; (cond
+    ;  ((is_compound prooflist)
+     ;  (loop
+;	    for item in prooflist
+;	    if (not (is_conj item))
+;	    do (setf resolve_result (append  resolve_result (list (resolve item *axioms* (my_find item *axioms*)))))
+ ;      (setf prooflist (append (list 'or 
+  ;  (print "Final List")
+    ;(print prooflist)
+    (cond
+      ((is_compound prooflist)
+       (setf temp (car (last prooflist))))
+      (t
+       (setf temp prooflist)))
+    (setf newer_clause (resolve temp axiom_list (my_find temp axiom_list)))
+    (print newer_clause)
+    ;(prove newer_clause axiom_list)
+    ))
