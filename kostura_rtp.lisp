@@ -32,6 +32,10 @@
 (defun remove_and_or (clause)
   (if (or (equal (car clause) 'or) (equal (car clause) 'and)) (cdr clause)))
 
+
+; Removes an unecessary "and" and "or" from a clause
+; This is necessary one we start removing imbedded clauses
+; to prove them.
 (defun remove_and_or (clause)
   (cond
     ((or (equal (car clause) 'or) (equal (car clause) 'and))
@@ -51,12 +55,12 @@
 (defun implies_clause (clause)
   (if (equal (car clause) 'implies) t
       nil))
-; Existential 
+; Determines if a clause is Existential 
 (defun exist_clause (clause)
   (if (equal (car clause) 'exists) t
       nil))
 
-;Universal
+; Determines if a clause is Universal
 (defun forall (clause)
   (if (equal (car clause) 'forall) t
       nil))
@@ -67,15 +71,21 @@
 (defun not_clause (clause)
   (if (equal (car clause) 'not) t
       nil))
-
+; Determines if a clause is compound
+; for example (or (not (dead marcus)) (alive marcus))
 (defun is_compound (clause)
   (if (or (not_clause clause) (forall clause) (exist_clause clause)
 	  (implies_clause clause) (and_clause clause) (or_clause clause)) t
 	  nil))
+
+; Determines is a clause is compound, except it doesn't count negated
+; clauses, so (not (dead marcus)) is not a compound clause, but
+; (or (not (dead marcus)) (alive marcus)) is considered compound.
 (defun is_compound_not (clause)
   (if (or (forall clause) (exist_clause clause)
 	  (implies_clause clause) (and_clause clause) (or_clause clause)) t
 	  nil))
+
 ;;A function to negate a clause
 ;; Creates a negated clause if the clause passed is true
 ;; Creates a true clause if the clause passed is negative.
@@ -83,15 +93,6 @@
   (if (not_clause clause) (cadr clause)
       (append (list 'not) (list clause))))
 
-
-(defun handle_or_clause (clause)
-  ;;Designed to take an OR clause, and seperate each clause
-  (if (not (or_clause clause)) "Error No OR detected"
-      (let ((clause (cdr clause)))
-	(loop
-	     for item in clause
-	     do (push item *Clause_list*))
-	(print *Clause_list*))))
 
 (defun my_find_2 (clause axiom_list)
   ;(print "Number 2")
@@ -108,20 +109,19 @@
 		   (setf cnt2(+ cnt2 1))))))
 
 (defun my_find (clause axiom_list)
-  ; expects 
-  ;returns the location of clause in axiom_list
-  ; includes imbedded list, in which case it returns a pair
-  ; (index in axiom set, index in to specific axiom)
-  ; since we add one to our counter before we look at an axiom, we must subtract one
-  ; form the first index just before we return.
+  ;; expects the negated version of the clause you are trying to find
+  ;; it negates the clause then searches the KB to find the resolvent
+  ;;
+  ;; returns the location of the resolvent in KB
+  ;; Returns pair if the resolvent is part of a larger axiom
+  ;; the first index is the axiom, the second index is the location in the axiom
+  ;; since we add one to our counter before we look at an axiom, we must subtract one
+  ;; form the first index just before we return.
   (let* ((cnt 0)
 	(clause (negate clause)))
-    ;(print "My find")
-    ;(print clause)
     (loop
        for item in axiom_list
 	 do (setf cnt  (+ cnt 1))
-	 ;do (print item)
 	 if (is_compound item)
 	     do (progn
 		  (let ((inner (my_find_2 clause item)))
@@ -132,10 +132,6 @@
 	      (print (format t "~S was resolved with ~S from axiom ~S from the knowledge base." (negate clause) clause cnt))
 	      (return-from my_find  (list (- cnt 1) 0))))))
 
-(defun mydisassemble (clause)
-  (loop
-     for item in clause
-       do (push item *Clause_list*)))
 
 (defun resolve (clause axiom_list location)
   ; This function takes an clause, the KB and the location of
@@ -191,10 +187,9 @@
 	 )))
 					; store its location in the axiom set in location
 
-; Pass the positive clause, the find function will negate it for you
-; Hopefully this will prove trivial things, not including variables.
-; Accepts the negate clause to be proven.
-; If you wanna prove (human marcus) then pass (not (human marcus))
+
+;; Accepts the negate clause to be proven.
+;; If you wanna prove (human marcus) then pass (not (human marcus))
 (defun prove (clause axiom_list &optional prflist)
 	(cond
 	  ((null clause)
