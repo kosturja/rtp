@@ -101,12 +101,14 @@
 	 ;do (print item)
 	 if (equal clause item)
 	 do (progn
+	      (print (format t " ~S was resolved with ~S from ~S"(negate clause) item axiom_list))
 	      (return cnt2))
 	 else do (progn
 		   ;(print cnt)
 		   (setf cnt2(+ cnt2 1))))))
 
 (defun my_find (clause axiom_list)
+  ; expects 
   ;returns the location of clause in axiom_list
   ; includes imbedded list, in which case it returns a pair
   ; (index in axiom set, index in to specific axiom)
@@ -115,7 +117,7 @@
   (let* ((cnt 0)
 	(clause (negate clause)))
     ;(print "My find")
-    (print clause)
+    ;(print clause)
     (loop
        for item in axiom_list
 	 do (setf cnt  (+ cnt 1))
@@ -126,7 +128,9 @@
 		    (if (not (null inner))
 			(return-from my_find (list (- cnt 1) inner)))))
        else if (equal clause item)
-       do (return-from my_find  (list cnt)))))
+	 do (progn
+	      (print (format t "~S was resolved with ~S from axiom ~S from the knowledge base." (negate clause) clause cnt))
+	      (return-from my_find  (list (- cnt 1) 0))))))
 
 (defun mydisassemble (clause)
   (loop
@@ -138,14 +142,19 @@
   ; the clause in the KB, we then return a proof_list with the
   ; results of resolving the clause.
   (let* ((first_index (car location))
-	(second_index (cadr location))
 	(whole_axiom (nth first_index *axioms*))
-	 ;(clause (negate clause))
-	 (temp_proof *Proof_list*))
+	 (clause (negate clause))
+	 (temp_proof '()))
     (pop *Proof_list*)
+    (cond
+      ((not (is_compound whole_axiom))
+       (cond
+	 ((equal clause whole_axiom)
+	  ;(print (format t "Resolved with single clause:~S"clause))
+	  (return-from resolve '())))))
     (loop
        for item in whole_axiom
-	 ;do (print "Looping")
+	 ;do (print (format t "Resolve loop:~S"item))
 	 if (not (equal clause item))
 	 do (progn
 	      (push (pop whole_axiom) temp_proof)))
@@ -183,41 +192,48 @@
 					; store its location in the axiom set in location
 
 ; Pass the positive clause, the find function will negate it for you
-; Hopefully this will prove trivial things, not including variables.	
+; Hopefully this will prove trivial things, not including variables.
+; Accepts the negate clause to be proven.
+; If you wanna prove (human marcus) then pass (not (human marcus))
 (defun prove (clause axiom_list &optional prflist)
-  (cond
-    ((null clause)
-     (print (format t "We proved it!")))
-    (t
-     (print (format t "We are trying to prove that ~S" clause))))
-  (cond
-    ((null clause)
-     (return-from prove t))
-    (t
-     (let ((prooflist prflist)
-	   (new_clause '())
-	   (newer_clause '())
-	   (temp '())
-	   (resolve_result '())
-	   (flag '()))
-       (cond
-	 ((and (not (null clause)) (not (null prooflist)))
-	  (setf prooflist (append (list 'or clause prooflist))))
-	 (t
-	  (setf prooflist (append clause))))
-	  ;(print "======")
-	  ;(print prooflist)))
-       (cond
-	 ((is_compound_not prooflist)
-	  (setf temp (car (last prooflist))))
-	 (t
-	  (setf temp prooflist)))
-	  ;(print "-------")
-	  ;(print temp)))
-       ;(print "******")
-       ;(print temp)
-       (setf newer_clause (resolve temp axiom_list (my_find temp axiom_list)))
-					;(print "newer")
-       (setf new_clause (remove_and_or newer_clause))
-       (prove new_clause axiom_list)
-    ))))
+	(cond
+	  ((null clause)
+	   (print (format t "We proved it!"))
+	   (return-from prove t))
+	  (t
+	   (print (format t "We are trying to prove ~S" clause))
+	   (let ((prooflist prflist)
+		 (new_clause '())
+		 (newer_clause '())
+		 (temp '())
+		 (temp2 '()))
+	     ;(print (format t "Clause:~S Prflist:~S" clause prflist))
+	     (cond
+	       ((and (not (null clause)) (not (null prooflist)))
+		;(print (format t "There not null"))
+		(setf prooflist (append (list 'or clause prooflist))))
+	       (t
+		(setf prooflist (append clause))))
+	     (cond
+	       ((is_compound_not prooflist)
+		(setf temp (car (last prooflist)))
+		(print (format t "We are trying to resolve :~S" temp))
+		(setf temp2 (remove_and_or  (reverse (cdr (reverse prooflist))))))
+	       (t
+		(setf temp prooflist)))
+	     ;(print (format t "The rest of prooflist:~S "temp2))
+	     ;(print (format t "Temp before we resolve:~S" temp))
+	     (setf newer_clause (resolve temp axiom_list (my_find temp axiom_list)))
+	     (cond
+	       ((not (null newer_clause))
+		;(print (format t "Removeing things :~S"newer_clause))
+		(setf new_clause (remove_and_or newer_clause))
+		(cond
+		  ((not (null temp2))
+		   (setf new_clause (append (list 'or temp2 new_clause))))))
+	       (t
+		;(print (format t "Newer_clause was nil:~S" temp2))
+		(setf new_clause  temp2)))
+	     ;(print (format t "Newer clause: ~S" newer_clause))
+	     ;(print (format t "New Clause: ~S" new_clause))
+	     (prove new_clause axiom_list )))))
