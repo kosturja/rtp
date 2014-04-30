@@ -1,0 +1,71 @@
+(prove '(not (dead marcus)) *axiom*)
+We are trying to prove (NOT (DEAD MARCUS))
+NIL  (NOT (DEAD MARCUS)) was resolved with (DEAD MARCUS) from (OR
+                                                               (NOT
+                                                                (MORTAL
+                                                                 MARCUS))
+                                                               (NOT
+                                                                (BORN
+                                                                 MARCUS
+                                                                 40))
+                                                               (DEAD
+                                                                MARCUS))
+NIL We are trying to prove (OR (NOT (MORTAL MARCUS))
+                               (NOT (BORN MARCUS 40)))
+NIL We are trying to resolve :(NOT (BORN MARCUS 40))
+NIL (NOT (BORN MARCUS 40)) was resolved with (BORN MARCUS 40) from axiom 2 from the
+knowledge base.
+NIL We are trying to prove (NOT (MORTAL MARCUS))
+NIL  (NOT (MORTAL MARCUS)) was resolved with (MORTAL MARCUS) from (OR
+                                                                   (NOT
+                                                                    (POMPEIAN
+                                                                     MARCUS))
+                                                                   (NOT
+                                                                    (BORN
+                                                                     MARCUS
+                                                                     40))
+                                                                   (MORTAL
+                                                                    MARCUS))
+NIL We are trying to prove (OR (NOT (POMPEIAN MARCUS))
+                               (NOT (BORN MARCUS 40)))
+NIL We are trying to resolve :(NOT (BORN MARCUS 40))
+NIL (NOT (BORN MARCUS 40)) was resolved with (BORN MARCUS 40) from axiom 2 from the
+knowledge base.
+NIL We are trying to prove (NOT (POMPEIAN MARCUS))
+NIL (NOT (POMPEIAN MARCUS)) was resolved with (POMPEIAN MARCUS) from axiom 1 from the
+knowledge base.
+NIL We proved it!
+NIL 
+T
+CL-USER> (prove '(not (human marcus
+		       ) *axioms*))
+; Evaluation aborted on #<SB-INT:SIMPLE-PROGRAM-ERROR "invalid number of arguments: ~S" {BA9D999}>.
+CL-USER> (prove '(not (human marcus
+		       )) *axioms*)
+We are trying to prove (NOT (HUMAN MARCUS))
+NIL  (NOT (HUMAN MARCUS)) was resolved with (HUMAN MARCUS) from (OR
+                                                                 (NOT
+                                                                  (POMPEIAN
+                                                                   MARCUS))
+                                                                 (NOT
+                                                                  (BORN
+                                                                   MARCUS
+                                                                   40))
+                                                                 (HUMAN
+                                                                  MARCUS))
+NIL We are trying to prove (OR (NOT (POMPEIAN MARCUS))
+                               (NOT (BORN MARCUS 40)))
+NIL We are trying to resolve :(NOT (BORN MARCUS 40))
+NIL (NOT (BORN MARCUS 40)) was resolved with (BORN MARCUS 40) from axiom 2 from the
+knowledge base.
+NIL We are trying to prove (NOT (POMPEIAN MARCUS))
+NIL (NOT (POMPEIAN MARCUS)) was resolved with (POMPEIAN MARCUS) from axiom 1 from the
+knowledge base.
+NIL We proved it!
+NIL 
+T
+CL-USER> (prove ' (human marcus
+		       ) *axioms*)
+We are trying to prove (HUMAN MARCUS)
+NIL ; Evaluation aborted on #<TYPE-ERROR expected-type: UNSIGNED-BYTE datum: NIL>.
+CL-USER> 
