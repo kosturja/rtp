@@ -24,5 +24,14 @@
 	       ; (mortal marcus) implies (dead marcus now)
 	       '(or (not (mortal marcus)) (not (born marcus 40)) (dead marcus))
 	       ))
-
-
+(defvar *axiom3* nil)
+(setq *Axiom3* (list
+'(or (not (mortal ?x)) (not (born ?x ?t1)) (not (gt ?t2 ?t1 150)) (dead ?x ?t2))
+     '(human Marcus)
+    '(pompeian Marcus)
+   '(born Marcus 40)
+	'(or (not (human ?x)) (mortal ?x))
+     '(or (not (pompeian ?x)) (died ?x 79) (erupted volcano 79))
+     '(or (not (died ?x ?t1)) (not (gt ?t2 ?t1)) (dead ?x ?t2))
+     '(human  ?x)
+     ))

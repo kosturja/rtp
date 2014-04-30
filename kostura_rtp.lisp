@@ -138,7 +138,7 @@
   ; the clause in the KB, we then return a proof_list with the
   ; results of resolving the clause.
   (let* ((first_index (car location))
-	(whole_axiom (nth first_index *axioms*))
+	(whole_axiom (nth first_index axiom_list))
 	 (clause (negate clause))
 	 (temp_proof '()))
     (pop *Proof_list*)
