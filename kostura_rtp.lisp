@@ -6,24 +6,7 @@
 (defvar *Clause_list* '())
 (load "unify.lisp")
 (load "axioms.lisp")
-;(defvar *Axioms* nil)
-(defvar *Proof_list* nil)
-(setf *Proof_list* '())
 
-;(setq *Axioms* (list
-;'(or (not (mortal ?x)) (not (born ?x ?t1)) (not (gt ?t2 ?t1 150)) (dead ?x ?t2))
-;     '(human Marcus)
- ;    '(pompeian Marcus)
-  ;   '(born Marcus 40)
-   ;  '(or (not (human ?x)) (mortal ?x))
-    ; 
-     ;'(or (not (pompeian ?x)) (died ?x 79) (erupted volcano 79))
-     ;'(or (not (died ?x ?t1)) (not (gt ?t2 ?t1)) (dead ?x ?t2))
-     ;'(human  ?x)
-     ;))
-
-(defun reset_clause_list ()
-  (setf *Clause_list* '()))
 
 ;;Determines if a clause starts with an OR
 (defun or_clause (clause)
@@ -93,7 +76,8 @@
   (if (not_clause clause) (cadr clause)
       (append (list 'not) (list clause))))
 
-
+; Used to search compound clauses as part
+; of my_find
 (defun my_find_2 (clause axiom_list)
   ;(print "Number 2")
   (let ((cnt2 0))
@@ -188,11 +172,12 @@
 					; store its location in the axiom set in location
 
 
-;; Accepts the negate clause to be proven.
+;; Accepts the negated clause to be proven.
 ;; If you wanna prove (human marcus) then pass (not (human marcus))
 (defun prove (clause axiom_list &optional prflist)
 	(cond
 	  ((null clause)
+	   ; Since we where passed null we proved our theorem
 	   (print (format t "We proved it!"))
 	   (return-from prove t))
 	  (t
@@ -202,33 +187,48 @@
 		 (newer_clause '())
 		 (temp '())
 		 (temp2 '()))
-	     ;(print (format t "Clause:~S Prflist:~S" clause prflist))
+					;(print (format t "Clause:~S Prflist:~S" clause prflist))
 	     (cond
+	       ;; This was designed for recursion call, and passing the option
+	       ;; parameter which would be addition things we need to prove
+	       ;; after resolving a single clause, but I handle this below
+	       ;; so its kinda redundent.
 	       ((and (not (null clause)) (not (null prooflist)))
-		;(print (format t "There not null"))
+					;(print (format t "There not null"))
 		(setf prooflist (append (list 'or clause prooflist))))
 	       (t
+		;; This is what we want to prove, basically the clause we are passed
 		(setf prooflist (append clause))))
 	     (cond
+	       ;; If our clause is compound we start by proving the last item.
 	       ((is_compound_not prooflist)
 		(setf temp (car (last prooflist)))
 		(print (format t "We are trying to resolve :~S" temp))
+		;; We need to maintain the rest of the orignal proof list
+		;; We append this later at pass it to the recursive call of prove
 		(setf temp2 (remove_and_or  (reverse (cdr (reverse prooflist))))))
 	       (t
 		(setf temp prooflist)))
-	     ;(print (format t "The rest of prooflist:~S "temp2))
-	     ;(print (format t "Temp before we resolve:~S" temp))
+					;(print (format t "The rest of prooflist:~S "temp2))
+					;(print (format t "Temp before we resolve:~S" temp))
+	     ;; Resolve are clause
 	     (setf newer_clause (resolve temp axiom_list (my_find temp axiom_list)))
 	     (cond
+	       ;; Remove unnecessary or
 	       ((not (null newer_clause))
-		;(print (format t "Removeing things :~S"newer_clause))
+					;(print (format t "Removeing things :~S"newer_clause))
 		(setf new_clause (remove_and_or newer_clause))
 		(cond
+		  ;; Here we append the results of resolving our clause
+		  ;; with the rest of the original prooflist
 		  ((not (null temp2))
 		   (setf new_clause (append (list 'or temp2 new_clause))))))
 	       (t
-		;(print (format t "Newer_clause was nil:~S" temp2))
+					;(print (format t "Newer_clause was nil:~S" temp2))
+		;; If the resolve funciton returned nul, because a single clause
+		;; resolved with a single clause we just pass the rest of the
+		;; original prooflist
 		(setf new_clause  temp2)))
-	     ;(print (format t "Newer clause: ~S" newer_clause))
-	     ;(print (format t "New Clause: ~S" new_clause))
+					;(print (format t "Newer clause: ~S" newer_clause))
+					;(print (format t "New Clause: ~S" new_clause))
 	     (prove new_clause axiom_list )))))
